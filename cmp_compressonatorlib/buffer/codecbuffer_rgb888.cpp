@@ -195,22 +195,45 @@ bool CCodecBuffer_RGB888::ReadBlockRGBA(CMP_DWORD x, CMP_DWORD y, CMP_BYTE w, CM
 
     CMP_DWORD* pdwBlock = (CMP_DWORD*)block;
     CMP_DWORD  i, j;
-    for (j = 0; j < h && (y + j) < GetHeight(); j++)
+    if (m_bSwizzle)
     {
-        CMP_BYTE* pSrcData  = (CMP_BYTE*)(GetData() + (y + j) * m_dwPitch + x * nChannelCount);
-        CMP_BYTE* pDestData = (CMP_BYTE*)&pdwBlock[j * dwWidth];
-
-        for (i = 0; i < dwWidth; i++)
+        for (j = 0; j < h && (y + j) < GetHeight(); j++)
         {
-            *pDestData++ = *pSrcData++;
-            *pDestData++ = *pSrcData++;
-            *pDestData++ = *pSrcData++;
-            *pDestData++ = 0xff;
-        }
+            CMP_BYTE* pSrcData  = (CMP_BYTE*)(GetData() + (y + j) * m_dwPitch + x * nChannelCount);
+            CMP_BYTE* pDestData = (CMP_BYTE*)&pdwBlock[j * dwWidth];
 
-        // Pad block with previous values if necessary
-        if (i < w)
-            PadLine(i, w, 4, (CMP_BYTE*)&pdwBlock[j * w]);
+            for (i = 0; i < dwWidth; i++)
+            {
+                *pDestData++ = pSrcData[2];
+                *pDestData++ = pSrcData[1];
+                *pDestData++ = pSrcData[0];
+                *pDestData++ = 0xff;
+                pSrcData += 3;
+            }
+
+            // Pad block with previous values if necessary
+            if (i < w)
+                PadLine(i, w, 4, (CMP_BYTE*)&pdwBlock[j * w]);
+        }
+    }
+    else {
+        for (j = 0; j < h && (y + j) < GetHeight(); j++)
+        {
+            CMP_BYTE* pSrcData  = (CMP_BYTE*)(GetData() + (y + j) * m_dwPitch + x * nChannelCount);
+            CMP_BYTE* pDestData = (CMP_BYTE*)&pdwBlock[j * dwWidth];
+
+            for (i = 0; i < dwWidth; i++)
+            {
+                *pDestData++ = *pSrcData++;
+                *pDestData++ = *pSrcData++;
+                *pDestData++ = *pSrcData++;
+                *pDestData++ = 0xff;
+            }
+
+            // Pad block with previous values if necessary
+            if (i < w)
+                PadLine(i, w, 4, (CMP_BYTE*)&pdwBlock[j * w]);
+        }
     }
 
     // Pad block with previous values if necessary
